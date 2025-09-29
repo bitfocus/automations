@@ -6,6 +6,7 @@ on:
     branches: ["main"]
     paths:
       - "dependabot-merge/**"
+      - ".github/workflows/dependabot-merge.yml"
 
 env:
   REGISTRY: ghcr.io
