@@ -22,10 +22,10 @@ for (const pr of prs.data.items) {
 
 		const parts = pr.repository_url.split('/')
 		const name = parts[parts.length - 1]
-		if (!name.startsWith('companion-module-')) continue
+		if (!name.startsWith('companion-module-') && !name.startsWith('companion-surface-')) continue
 
 		// skip companion-module PRs
-		if (pr.title.toLowerCase().includes('@companion-module/')) continue
+		if (pr.title.toLowerCase().includes('@companion-module/') || pr.title.toLowerCase().includes('@companion-surface/')) continue
 
 		const match = /bump (.+) (\d.+) to (\d.+)/i.exec(pr.title.toLocaleLowerCase())
 		if (!match) continue
