@@ -2,3 +2,6 @@ node_modules
 run.sh
 dist
 .yarn
+
+/src/prisma
+/.env

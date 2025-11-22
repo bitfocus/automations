@@ -11,7 +11,7 @@
 		"lint:raw": "run eslint",
 		"lint": "yarn lint:raw .",
 		"lint-fix": "yarn lint --fix",
-		"dev": "node --loader ts-node/esm src/main.ts",
+		"dev": "node --env-file .env --loader ts-node/esm src/main.ts",
 		"eslint": "./node_modules/.bin/eslint"
 	},
 	"prettier": "@sofie-automation/code-standard-preset/.prettierrc.json",
@@ -20,10 +20,13 @@
 		"@types/node": "^22.15.31",
 		"eslint": "^9.29.0",
 		"prettier": "^3.5.3",
+		"prisma": "^7.0.0",
 		"ts-node": "^10.9.2",
 		"typescript": "~5.7.3"
 	},
 	"dependencies": {
+		"@prisma/adapter-mariadb": "^7.0.0",
+		"@prisma/client": "^7.0.0",
 		"mysql2": "^3.14.1",
 		"sequelize": "^6.37.7",
 		"tslib": "^2.8.1"

@@ -1,9 +1,9 @@
 import { Sequelize, Model, DataTypes, DataType, ModelAttributeColumnOptions } from 'sequelize'
 
-const mysqlUrl = process.env.MYSQL_URL2 || ''
+const mysqlUrl = process.env.DATABASE_URL || ''
 
 if (!mysqlUrl || mysqlUrl.length === 0) {
-	throw new Error('MYSQL_URL2 is required')
+	throw new Error('DATABASE_URL is required')
 }
 
 const sequelize = new Sequelize(mysqlUrl)

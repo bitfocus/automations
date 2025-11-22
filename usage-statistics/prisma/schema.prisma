@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model companion_modules {
+  id         Int                    @id @default(autoincrement())
+  type       companion_modules_type
+  module     String                 @db.VarChar(64)
+  user_count Int
+  ts         DateTime               @default(now()) @db.DateTime(0)
+
+  @@index([module], map: "module")
+  @@index([ts], map: "ts")
+  @@index([type], map: "type")
+}
+
+model companion_platform_stats {
+  id            Int                           @id @default(autoincrement())
+  type          companion_platform_stats_type
+  platform      String                        @db.VarChar(32)
+  release_group String                        @db.VarChar(64)
+  user_count    Int
+  ts            DateTime                      @default(now()) @db.DateTime(0)
+}
+
+model companion_platforms {
+  id         Int                      @id @default(autoincrement())
+  type       companion_platforms_type
+  platform   String                   @db.VarChar(32)
+  arch       String                   @db.VarChar(16)
+  user_count Int
+  ts         DateTime                 @default(now()) @db.DateTime(0)
+}
+
+model companion_users {
+  id         Int                  @id @default(autoincrement())
+  type       companion_users_type
+  version    String               @db.VarChar(64)
+  user_count Int
+  ts         DateTime             @default(now()) @db.DateTime(0)
+
+  @@index([ts], map: "ts")
+  @@index([type], map: "type")
+}
+
+enum companion_platform_stats_type {
+  day1  @map("1day")
+  day7  @map("7day")
+  day30 @map("30day")
+}
+
+enum companion_modules_type {
+  day1  @map("1day")
+  day7  @map("7day")
+  day30 @map("30day")
+}
+
+enum companion_platforms_type {
+  day1  @map("1day")
+  day7  @map("7day")
+  day30 @map("30day")
+}
+
+enum companion_users_type {
+  day1  @map("1day")
+  day7  @map("7day")
+  day30 @map("30day")
+}
