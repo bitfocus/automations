@@ -1,4 +1,3 @@
-import { QueryTypes } from 'sequelize'
 import { DRY_RUN, runQuery } from './util.js'
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -10,14 +9,12 @@ function formatQuery(interval: string) {
 }
 
 export async function runModules(store: AppStore): Promise<void> {
-	const allModules: any[] = await store.oldDb.query<any>('SELECT module FROM `module` group by module;', {
-		type: QueryTypes.SELECT,
-	})
+	const allModules: any[] = await store.oldDb.query('SELECT module FROM `module` group by module;')
 
 	function convertModules(stats: any[], type: StatsSamplePeriod): Omit<CompanionModules, 'id' | 'ts'>[] {
 		const statsMap = new Map<string, number>()
 		for (const stat of stats) {
-			statsMap.set(stat.module, stat.users)
+			statsMap.set(stat.module, Number(stat.users))
 		}
 
 		return allModules

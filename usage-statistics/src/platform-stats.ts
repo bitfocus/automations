@@ -24,7 +24,7 @@ function translateResults(stats: any[], type: StatsSamplePeriod): Omit<Companion
 		if (!groupedStats[key]) {
 			groupedStats[key] = 0
 		}
-		groupedStats[key] += users
+		groupedStats[key] += Number(users)
 	}
 
 	return Object.entries<number>(groupedStats).map(([key, user_count]) => {

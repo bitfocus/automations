@@ -1,7 +1,7 @@
-import type { Sequelize } from 'sequelize'
 import type { PrismaClient } from './prisma/client.js'
+import type mariadb from 'mariadb'
 
 export interface AppStore {
 	prismaDest: PrismaClient
-	oldDb: Sequelize
+	oldDb: mariadb.Connection
 }

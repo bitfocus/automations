@@ -107,8 +107,7 @@ function translateResults(stats: any[], type: StatsSamplePeriod): Omit<Companion
 		if (!id) id = 'other'
 
 		if (id) {
-			if (!sums[id]) sums[id] = 0
-			sums[id] += users
+			sums[id] = (sums[id] || 0) + Number(users)
 		} else {
 			console.log(users, app_build)
 		}

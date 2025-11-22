@@ -9,7 +9,7 @@ function translateResults(stats: any[], type: StatsSamplePeriod): Omit<Companion
 		type,
 		platform: os_platform,
 		arch: os_arch,
-		user_count: users ?? 0,
+		user_count: Number(users) || 0,
 	}))
 }
 

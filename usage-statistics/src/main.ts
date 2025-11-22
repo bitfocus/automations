@@ -1,4 +1,3 @@
-import { initDb } from './models-raw.js'
 import { PrismaClient } from './prisma/client.js'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import { runUsers } from './users-data.js'
@@ -6,6 +5,7 @@ import { runUsers } from './users-data.js'
 import { runPlatforms } from './platforms.js'
 import { runPlatformStats } from './platform-stats.js'
 import type { AppStore } from './types.js'
+import mariadb from 'mariadb'
 
 console.log('hello world')
 
@@ -14,24 +14,33 @@ if (!connectionString) {
 	throw new Error('DATABASE_URL environment variable is required')
 }
 
+const oldSourceUrl = process.env.OLD_SOURCE_DATABASE_URL
+if (!oldSourceUrl) {
+	throw new Error('OLD_SOURCE_DATABASE_URL environment variable is required')
+}
+
 const adapter = new PrismaMariaDb(connectionString)
 const prismaDest = new PrismaClient({
 	adapter,
 })
 
-const oldDb = await initDb()
+const oldDb2 = await mariadb.createConnection(oldSourceUrl)
 
 const store: AppStore = {
 	prismaDest,
-	oldDb,
+	oldDb: oldDb2,
 }
 
-await Promise.all([
-	// Set everything going
-	runUsers(store),
-	// runModules(store),
-	runPlatforms(store),
-	runPlatformStats(store),
-])
+try {
+	await Promise.all([
+		// Set everything going
+		runUsers(store),
+		// runModules(store),
+		runPlatforms(store),
+		runPlatformStats(store),
+	])
 
-console.log('all done!')
+	console.log('all done!')
+} finally {
+	await oldDb2.end()
+}

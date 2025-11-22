@@ -1,4 +1,4 @@
-import { QueryTypes, Sequelize } from 'sequelize'
+import type mariadb from 'mariadb'
 
 export const DRY_RUN = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true'
 
@@ -10,7 +10,7 @@ export async function runWithRetry(identifier: string, fcn: () => Promise<void>)
 	try {
 		await fcn()
 	} catch (_e) {
-		console.warn(`Query ${identifier} failed. Retrying...`)
+		console.warn(`Query ${identifier} failed. Retrying...`, _e)
 
 		// Sleep in case something is down briefly
 		await sleep(30 * 1000)
@@ -21,15 +21,13 @@ export async function runWithRetry(identifier: string, fcn: () => Promise<void>)
 }
 
 export async function runQuery(
-	db: Sequelize,
+	db: mariadb.Connection,
 	identifier: string,
 	query: string,
 	saveStats: (rows: any[]) => Promise<void>
 ): Promise<void> {
 	await runWithRetry(identifier, async () => {
-		const stats = await db.query<any>(query, {
-			type: QueryTypes.SELECT,
-		})
+		const stats = await db.query(query)
 		await saveStats(stats)
 	}).catch((e) => {
 		console.error(`${identifier} failed`, e)
