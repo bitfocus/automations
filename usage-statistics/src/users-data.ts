@@ -130,7 +130,8 @@ async function writeData(store: AppStore, stats: any[], type: StatsSamplePeriod)
 	if (DRY_RUN) {
 		await writeFile(path.join(import.meta.dirname, `../dry-run/users-${type}.json`), JSON.stringify(data, null, 2))
 	} else {
-		await store.prismaDest.companionUsers.createMany({ data })
+		const res = await store.prismaDest.companionUsers.createMany({ data })
+		console.log(`Inserted ${res.count} records for users ${type}`)
 	}
 }
 

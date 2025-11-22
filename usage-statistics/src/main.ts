@@ -35,7 +35,7 @@ try {
 	await Promise.all([
 		// Set everything going
 		runUsers(store),
-		// runModules(store),
+		runModules(store),
 		runPlatforms(store),
 		runPlatformStats(store),
 	])

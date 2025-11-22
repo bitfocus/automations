@@ -51,7 +51,8 @@ async function writeData(store: AppStore, stats: any[], type: StatsSamplePeriod)
 			JSON.stringify(data, null, 2)
 		)
 	} else {
-		await store.prismaDest.companionPlatformStats.createMany({ data })
+		const res = await store.prismaDest.companionPlatformStats.createMany({ data })
+		console.log(`Inserted ${res.count} records for platform stats ${type}`)
 	}
 }
 

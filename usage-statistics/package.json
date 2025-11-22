@@ -11,7 +11,7 @@
 		"lint:raw": "run eslint",
 		"lint": "yarn lint:raw .",
 		"lint-fix": "yarn lint --fix",
-		"dev": "node --env-file .env --loader ts-node/esm src/main.ts",
+		"dev": "tsx --env-file .env src/main.ts",
 		"eslint": "./node_modules/.bin/eslint",
 		"db:generate": "prisma generate",
 		"db:push": "prisma db push"
@@ -23,7 +23,7 @@
 		"eslint": "^9.29.0",
 		"prettier": "^3.5.3",
 		"prisma": "^7.0.0",
-		"ts-node": "^10.9.2",
+		"tsx": "^4.20.6",
 		"typescript": "~5.7.3"
 	},
 	"dependencies": {

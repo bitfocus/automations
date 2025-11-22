@@ -35,7 +35,8 @@ export async function runModules(store: AppStore): Promise<void> {
 		if (DRY_RUN) {
 			await writeFile(path.join(import.meta.dirname, `../dry-run/modules-${type}.json`), JSON.stringify(data, null, 2))
 		} else {
-			await store.prismaDest.companionModules.createMany({ data })
+			const res = await store.prismaDest.companionModules.createMany({ data })
+			console.log(`Inserted ${res.count} records for modules ${type}`)
 		}
 	}
 
