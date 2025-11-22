@@ -7,15 +7,15 @@ import { runPlatformStats } from './platform-stats.js'
 
 console.log('hello world')
 
-const db = await initDb()
+const oldDb = await initDb()
 await initDb2()
 
 await Promise.all([
 	// Set everything going
-	runUsers(db),
-	runModules(db),
-	runPlatforms(db),
-	runPlatformStats(db),
+	runUsers(oldDb),
+	runModules(oldDb),
+	runPlatforms(oldDb),
+	runPlatformStats(oldDb),
 ])
 
 console.log('all done!')

@@ -1,5 +1,7 @@
 import { QueryTypes, Sequelize } from 'sequelize'
 
+export const DRY_RUN = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true'
+
 export async function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms || 0))
 }

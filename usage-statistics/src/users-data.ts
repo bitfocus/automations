@@ -1,6 +1,8 @@
 import { Sequelize } from 'sequelize'
 import { IUsersInfo, UsersInfo } from './models-grafana.js'
-import { runQuery } from './util.js'
+import { DRY_RUN, runQuery } from './util.js'
+import { writeFile } from 'node:fs/promises'
+import path from 'node:path'
 
 function translateResults(stats: any[], type: IUsersInfo['type']): Omit<IUsersInfo, 'id' | 'ts'>[] {
 	const regex = /^(\d+).(\d+).(\d+)/
@@ -122,16 +124,27 @@ function translateResults(stats: any[], type: IUsersInfo['type']): Omit<IUsersIn
 function formatQuery(interval: string) {
 	return `SELECT COUNT(*) users, app_build FROM \`user\` WHERE app_name = 'companion' AND last_seen >= DATE_SUB(CURRENT_DATE, interval ${interval}) GROUP BY app_build;`
 }
+
+async function writeData(stats: any[], type: IUsersInfo['type']) {
+	const data = translateResults(stats, type)
+
+	if (DRY_RUN) {
+		await writeFile(path.join(import.meta.dirname, `../dry-run/users-${type}.json`), JSON.stringify(data, null, 2))
+	} else {
+		await UsersInfo.bulkCreate<UsersInfo>(data)
+	}
+}
+
 export async function runUsers(db: Sequelize): Promise<void> {
 	await Promise.all([
 		runQuery(db, 'Users 30day', formatQuery('30 day'), async (stats) => {
-			await UsersInfo.bulkCreate<UsersInfo>(translateResults(stats, '30day'))
+			await writeData(stats, '30day')
 		}),
 		runQuery(db, 'Users 7day', formatQuery('7 day'), async (stats) => {
-			await UsersInfo.bulkCreate<UsersInfo>(translateResults(stats, '7day'))
+			await writeData(stats, '7day')
 		}),
 		runQuery(db, 'Users 1day', formatQuery('24 hour'), async (stats) => {
-			await UsersInfo.bulkCreate<UsersInfo>(translateResults(stats, '1day'))
+			await writeData(stats, '1day')
 		}),
 	])
 }
