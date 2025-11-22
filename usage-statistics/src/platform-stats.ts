@@ -60,15 +60,15 @@ export async function runPlatformStats(store: AppStore): Promise<void> {
 	await Promise.all([
 		runQuery('Platform Stats 30day', async () => {
 			const rows = await store.srcDb.query(formatQuery('30 day'))
-			await writeData(store, rows, '30day')
+			await writeData(store, rows, 'day30' as '30day')
 		}),
 		runQuery('Platform Stats 7day', async () => {
 			const rows = await store.srcDb.query(formatQuery('7 day'))
-			await writeData(store, rows, '7day')
+			await writeData(store, rows, 'day7' as '7day')
 		}),
 		runQuery('Platform Stats 1day', async () => {
 			const rows = await store.srcDb.query(formatQuery('24 hour'))
-			await writeData(store, rows, '1day')
+			await writeData(store, rows, 'day1' as '1day')
 		}),
 	])
 }
