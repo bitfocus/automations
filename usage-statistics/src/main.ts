@@ -50,4 +50,5 @@ try {
 	console.log('all done!')
 } finally {
 	await oldDb.end()
+	await srcDb.end()
 }

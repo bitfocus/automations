@@ -14,7 +14,7 @@ function translateResults(stats: any[], type: StatsSamplePeriod): Omit<Companion
 }
 
 function formatQuery(interval: string) {
-	return `SELECT COUNT(*) users, os_platform, os_arch FROM \`user\` WHERE app_name = 'companion' AND last_seen >= DATE_SUB(CURRENT_DATE, interval ${interval}) GROUP BY os_platform, os_arch;`
+	return `SELECT COUNT(*) users, os_platform, os_arch FROM \`User\` WHERE app_name = 'companion' AND updatedAt >= DATE_SUB(CURRENT_DATE, interval ${interval}) GROUP BY os_platform, os_arch;`
 }
 
 async function writeData(store: AppStore, stats: any[], type: StatsSamplePeriod) {
@@ -31,15 +31,15 @@ async function writeData(store: AppStore, stats: any[], type: StatsSamplePeriod)
 export async function runPlatforms(store: AppStore): Promise<void> {
 	await Promise.all([
 		runQuery('Platforms 30day', async () => {
-			const rows = await store.oldDb.query(formatQuery('30 day'))
+			const rows = await store.srcDb.query(formatQuery('30 day'))
 			await writeData(store, rows, '30day')
 		}),
 		runQuery('Platforms 7day', async () => {
-			const rows = await store.oldDb.query(formatQuery('7 day'))
+			const rows = await store.srcDb.query(formatQuery('7 day'))
 			await writeData(store, rows, '7day')
 		}),
 		runQuery('Platforms 1day', async () => {
-			const rows = await store.oldDb.query(formatQuery('24 hour'))
+			const rows = await store.srcDb.query(formatQuery('24 hour'))
 			await writeData(store, rows, '1day')
 		}),
 	])
