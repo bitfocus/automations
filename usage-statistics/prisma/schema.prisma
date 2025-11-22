@@ -7,66 +7,58 @@ datasource db {
   provider = "mysql"
 }
 
-model companion_modules {
-  id         Int                    @id @default(autoincrement())
-  type       companion_modules_type
-  module     String                 @db.VarChar(64)
+model CompanionModules {
+  id         Int               @id @default(autoincrement())
+  type       StatsSamplePeriod
+  module     String            @db.VarChar(64)
   user_count Int
-  ts         DateTime               @default(now()) @db.DateTime(0)
+  ts         DateTime          @default(now()) @db.DateTime(0)
 
   @@index([module], map: "module")
   @@index([ts], map: "ts")
   @@index([type], map: "type")
+  @@map("companion_modules")
 }
 
-model companion_platform_stats {
-  id            Int                           @id @default(autoincrement())
-  type          companion_platform_stats_type
-  platform      String                        @db.VarChar(32)
-  release_group String                        @db.VarChar(64)
+model CompanionPlatformStats {
+  id            Int               @id @default(autoincrement())
+  type          StatsSamplePeriod
+  platform      String            @db.VarChar(32)
+  release_group String            @db.VarChar(64)
   user_count    Int
-  ts            DateTime                      @default(now()) @db.DateTime(0)
+  ts            DateTime          @default(now()) @db.DateTime(0)
+
+  @@index([ts])
+  @@index([type])
+  @@map("companion_platform_stats")
 }
 
-model companion_platforms {
-  id         Int                      @id @default(autoincrement())
-  type       companion_platforms_type
-  platform   String                   @db.VarChar(32)
-  arch       String                   @db.VarChar(16)
+model CompanionPlatforms {
+  id         Int               @id @default(autoincrement())
+  type       StatsSamplePeriod
+  platform   String            @db.VarChar(32)
+  arch       String            @db.VarChar(16)
   user_count Int
-  ts         DateTime                 @default(now()) @db.DateTime(0)
+  ts         DateTime          @default(now()) @db.DateTime(0)
+
+  @@index([ts])
+  @@index([type])
+  @@map("companion_platforms")
 }
 
-model companion_users {
-  id         Int                  @id @default(autoincrement())
-  type       companion_users_type
-  version    String               @db.VarChar(64)
+model CompanionUsers {
+  id         Int               @id @default(autoincrement())
+  type       StatsSamplePeriod
+  version    String            @db.VarChar(64)
   user_count Int
-  ts         DateTime             @default(now()) @db.DateTime(0)
+  ts         DateTime          @default(now()) @db.DateTime(0)
 
   @@index([ts], map: "ts")
   @@index([type], map: "type")
+  @@map("companion_users")
 }
 
-enum companion_platform_stats_type {
-  day1  @map("1day")
-  day7  @map("7day")
-  day30 @map("30day")
-}
-
-enum companion_modules_type {
-  day1  @map("1day")
-  day7  @map("7day")
-  day30 @map("30day")
-}
-
-enum companion_platforms_type {
-  day1  @map("1day")
-  day7  @map("7day")
-  day30 @map("30day")
-}
-
-enum companion_users_type {
+enum StatsSamplePeriod {
   day1  @map("1day")
   day7  @map("7day")
   day30 @map("30day")

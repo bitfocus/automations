@@ -12,7 +12,9 @@
 		"lint": "yarn lint:raw .",
 		"lint-fix": "yarn lint --fix",
 		"dev": "node --env-file .env --loader ts-node/esm src/main.ts",
-		"eslint": "./node_modules/.bin/eslint"
+		"eslint": "./node_modules/.bin/eslint",
+		"db:generate": "prisma generate",
+		"db:push": "prisma db push"
 	},
 	"prettier": "@sofie-automation/code-standard-preset/.prettierrc.json",
 	"devDependencies": {

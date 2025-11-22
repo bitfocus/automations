@@ -1,10 +1,10 @@
-import { Sequelize } from 'sequelize'
-import { IPlatformStatsInfo, PlatformStatsInfo } from './models-grafana.js'
 import { DRY_RUN, runQuery } from './util.js'
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import type { AppStore } from './types.js'
+import type { CompanionPlatformStats, StatsSamplePeriod } from './prisma/client.js'
 
-function translateResults(stats: any[], type: IPlatformStatsInfo['type']): Omit<IPlatformStatsInfo, 'id' | 'ts'>[] {
+function translateResults(stats: any[], type: StatsSamplePeriod): Omit<CompanionPlatformStats, 'id' | 'ts'>[] {
 	const groupedStats: Record<string, number> = {}
 
 	for (const { users, os_platform, os_release } of stats) {
@@ -42,7 +42,7 @@ function formatQuery(interval: string) {
 	return `SELECT COUNT(*) users, os_platform, os_release FROM \`user\` WHERE app_name = 'companion' AND last_seen >= DATE_SUB(CURRENT_DATE, interval ${interval}) GROUP BY os_platform, os_release;`
 }
 
-async function writeData(stats: any[], type: IPlatformStatsInfo['type']) {
+async function writeData(store: AppStore, stats: any[], type: StatsSamplePeriod) {
 	const data = translateResults(stats, type)
 
 	if (DRY_RUN) {
@@ -51,20 +51,20 @@ async function writeData(stats: any[], type: IPlatformStatsInfo['type']) {
 			JSON.stringify(data, null, 2)
 		)
 	} else {
-		await PlatformStatsInfo.bulkCreate<PlatformStatsInfo>(data)
+		await store.prismaDest.companionPlatformStats.createMany({ data })
 	}
 }
 
-export async function runPlatformStats(db: Sequelize): Promise<void> {
+export async function runPlatformStats(store: AppStore): Promise<void> {
 	await Promise.all([
-		runQuery(db, 'Platform Stats 30day', formatQuery('30 day'), async (stats) => {
-			await writeData(stats, '30day')
+		runQuery(store.oldDb, 'Platform Stats 30day', formatQuery('30 day'), async (stats) => {
+			await writeData(store, stats, '30day')
 		}),
-		runQuery(db, 'Platform Stats 7day', formatQuery('7 day'), async (stats) => {
-			await writeData(stats, '7day')
+		runQuery(store.oldDb, 'Platform Stats 7day', formatQuery('7 day'), async (stats) => {
+			await writeData(store, stats, '7day')
 		}),
-		runQuery(db, 'Platform Stats 1day', formatQuery('24 hour'), async (stats) => {
-			await writeData(stats, '1day')
+		runQuery(store.oldDb, 'Platform Stats 1day', formatQuery('24 hour'), async (stats) => {
+			await writeData(store, stats, '1day')
 		}),
 	])
 }
