@@ -14,6 +14,11 @@ if (!connectionString) {
 	throw new Error('DATABASE_URL environment variable is required')
 }
 
+const sourceUrl = process.env.SOURCE_DATABASE_URL
+if (!sourceUrl) {
+	throw new Error('SOURCE_DATABASE_URL environment variable is required')
+}
+
 const oldSourceUrl = process.env.OLD_SOURCE_DATABASE_URL
 if (!oldSourceUrl) {
 	throw new Error('OLD_SOURCE_DATABASE_URL environment variable is required')
@@ -24,23 +29,25 @@ const prismaDest = new PrismaClient({
 	adapter,
 })
 
-const oldDb2 = await mariadb.createConnection(oldSourceUrl)
+const srcDb = await mariadb.createConnection(sourceUrl)
+const oldDb = await mariadb.createConnection(oldSourceUrl)
 
 const store: AppStore = {
 	prismaDest,
-	oldDb: oldDb2,
+	srcDb,
+	oldDb,
 }
 
 try {
 	await Promise.all([
 		// Set everything going
 		runUsers(store),
-		runModules(store),
+		// runModules(store),
 		runPlatforms(store),
 		runPlatformStats(store),
 	])
 
 	console.log('all done!')
 } finally {
-	await oldDb2.end()
+	await oldDb.end()
 }

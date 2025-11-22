@@ -41,14 +41,17 @@ export async function runModules(store: AppStore): Promise<void> {
 	}
 
 	await Promise.all([
-		runQuery(store.oldDb, 'Platforms 30day', formatQuery('30 day'), async (stats) => {
-			await writeData(stats, '30day')
+		runQuery('Platforms 30day', async () => {
+			const rows = await store.oldDb.query(formatQuery('30 day'))
+			await writeData(rows, '30day')
 		}),
-		runQuery(store.oldDb, 'Platforms 7day', formatQuery('7 day'), async (stats) => {
-			await writeData(stats, '7day')
+		runQuery('Platforms 7day', async () => {
+			const rows = await store.oldDb.query(formatQuery('7 day'))
+			await writeData(rows, '7day')
 		}),
-		runQuery(store.oldDb, 'Platforms 1day', formatQuery('24 hour'), async (stats) => {
-			await writeData(stats, '1day')
+		runQuery('Platforms 1day', async () => {
+			const rows = await store.oldDb.query(formatQuery('24 hour'))
+			await writeData(rows, '1day')
 		}),
 	])
 }
