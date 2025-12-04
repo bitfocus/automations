@@ -58,6 +58,28 @@ model CompanionUsers {
   @@map("companion_users")
 }
 
+// Count number of unique user+surface pairs seen in the period
+model CompanionSurfaceDailyCounts {
+  id          Int               @id @default(autoincrement())
+  type        StatsSamplePeriod
+  description String            @db.VarChar(128)
+  count       Int
+  ts          DateTime          @default(now()) @db.DateTime(0)
+
+  @@index([ts], map: "ts")
+  @@index([type], map: "type")
+}
+
+// Count total number of seen surfaces
+model CompanionSurfaceTotalSeen {
+  id          Int      @id @default(autoincrement())
+  description String   @db.VarChar(128)
+  count       Int
+  ts          DateTime @default(now()) @db.DateTime(0)
+
+  @@index([ts], map: "ts")
+}
+
 enum StatsSamplePeriod {
   day1  @map("1day")
   day7  @map("7day")

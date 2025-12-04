@@ -6,6 +6,7 @@ import { runPlatforms } from './platforms.js'
 import { runPlatformStats } from './platform-stats.js'
 import type { AppStore } from './types.js'
 import mariadb from 'mariadb'
+import { runSurfaceCounts, runSurfaceTotals } from './surfaces.js'
 
 console.log('hello world')
 
@@ -45,6 +46,8 @@ try {
 		runModules(store),
 		runPlatforms(store),
 		runPlatformStats(store),
+		runSurfaceCounts(store),
+		runSurfaceTotals(store),
 	])
 
 	console.log('all done!')
