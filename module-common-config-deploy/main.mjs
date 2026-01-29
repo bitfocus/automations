@@ -90,56 +90,22 @@ for (const repo of allRepos) {
 			})
 		}
 
-		// Check if issue templates exist and get their content
-		const [bugTemplate, configTemplate, featureTemplate] = await Promise.all([
-			fetchFileContent(repoName, '.github/ISSUE_TEMPLATE/bug_report.yml'),
-			fetchFileContent(repoName, '.github/ISSUE_TEMPLATE/config.yml'),
-			fetchFileContent(repoName, '.github/ISSUE_TEMPLATE/feature_request.yml'),
-		])
-
-		const expectedFiles = await targetIssueTemplateContentBase64
-
-		// Check if all templates exist and match expected versions
-		const templatesMatch =
-			bugTemplate === expectedFiles.bugFile &&
-			(configTemplate === expectedFiles.configFile || configTemplate === expectedFiles.configFileOld) &&
-			featureTemplate === expectedFiles.featureFile
-
-		if (templatesMatch) {
-			console.log(`${repoName}: templates match expected versions`)
-
-			// HACK: this is a temporary fixup, because of the accidental deployment..
-
-			// Delete the marker file if it exists
-			const markerFile = await fileExists(repoName, '.github/.companion-manual-issue-templates')
-			if (markerFile) {
-				console.log(`${repoName}: deleting marker file (templates are up to date)`)
-				await octokit.rest.repos.deleteFile({
-					owner: 'bitfocus',
-					repo: repoName,
-					path: '.github/.companion-manual-issue-templates',
-					message: 'chore: remove accidental manual issue templates marker',
-					sha: markerFile.sha,
-				})
-			}
+		const issueTemplateSetManual = await fileExists(repoName, '.github/.companion-manual-issue-templates')
+		if (issueTemplateSetManual) {
+			console.log(`Skipping ${repoName}: companion-manual-issue-templates flag set`)
 		} else {
-			// Templates don't match or don't exist
-			const issueTemplateSetManual = await fileExists(repoName, '.github/.companion-manual-issue-templates')
-			if (issueTemplateSetManual) {
-				console.log(`Skipping ${repoName}: companion-manual-issue-templates flag set`)
-			} else {
-				if (templatesMatch) {
-					console.log(`Skipping ${repoName}: templates exist and are up to date`)
-				} else {
-					console.log(`Creating ${repoName}: templates need updating`)
+			const expectedFiles = await targetIssueTemplateContentBase64
 
-					await updateMultipleFiles(repoName, repo.default_branch, {
-						'.github/ISSUE_TEMPLATE/bug_report.yml': expectedFiles.bugFile,
-						'.github/ISSUE_TEMPLATE/config.yml': expectedFiles.configFile,
-						'.github/ISSUE_TEMPLATE/feature_request.yml': expectedFiles.featureFile,
-					})
-				}
-			}
+			await syncMultipleFiles(
+				repoName,
+				repo.default_branch,
+				{
+					'.github/ISSUE_TEMPLATE/bug_report.yml': expectedFiles.bugFile,
+					'.github/ISSUE_TEMPLATE/config.yml': [expectedFiles.configFile, expectedFiles.configFileOld],
+					'.github/ISSUE_TEMPLATE/feature_request.yml': expectedFiles.featureFile,
+				},
+				'chore: update issue templates'
+			)
 		}
 
 		// Check and remove package-lock.json if it exists
@@ -170,7 +136,29 @@ for (const repo of allRepos) {
 
 console.log('All errors', errors)
 
-async function updateMultipleFiles(repoName, defaultBranch, files) {
+async function syncMultipleFiles(repoName, defaultBranch, files, message) {
+	// Fetch current content for all files
+	const currentFiles = await Promise.all(
+		Object.keys(files).map((path) => fetchFileContent(repoName, path).then((content) => ({ path, content })))
+	)
+
+	// Filter to only files that need updating
+	const filesToUpdate = Object.entries(files).filter(([path, newContent]) => {
+		const current = currentFiles.find((f) => f.path === path)
+		if (!current) return true
+		if (Array.isArray(newContent)) {
+			return !newContent.includes(current.content)
+		}
+		return current?.content !== newContent
+	})
+
+	if (filesToUpdate.length === 0) {
+		console.log(`Skipping ${repoName}: all files are already up to date`)
+		return
+	}
+
+	console.log(`Updating ${repoName}: ${filesToUpdate.length} file(s) need updating`)
+
 	// Get reference to the default branch
 	const { data: ref } = await octokit.rest.git.getRef({
 		owner: 'bitfocus',
@@ -187,13 +175,13 @@ async function updateMultipleFiles(repoName, defaultBranch, files) {
 		commit_sha: baseSha,
 	})
 
-	// Create blobs for each file
+	// Create blobs for each file that needs updating
 	const blobs = await Promise.all(
-		Object.entries(files).map(async ([path, content]) => {
+		filesToUpdate.map(async ([path, content]) => {
 			const { data: blob } = await octokit.rest.git.createBlob({
 				owner: 'bitfocus',
 				repo: repoName,
-				content,
+				content: Array.isArray(content) ? content[0] : content,
 				encoding: 'base64',
 			})
 			return { path, sha: blob.sha }
@@ -217,7 +205,7 @@ async function updateMultipleFiles(repoName, defaultBranch, files) {
 	const { data: newCommit } = await octokit.rest.git.createCommit({
 		owner: 'bitfocus',
 		repo: repoName,
-		message: 'chore: add issue templates',
+		message: message,
 		tree: newTree.sha,
 		parents: [baseSha],
 	})
@@ -230,7 +218,7 @@ async function updateMultipleFiles(repoName, defaultBranch, files) {
 		sha: newCommit.sha,
 	})
 
-	console.log(`Updated ${repoName} with ${Object.keys(files).length} files in a single commit`)
+	console.log(`Updated ${repoName} with ${filesToUpdate.length} file(s) in a single commit`)
 }
 
 async function fetchFileContent(repoName, path) {
