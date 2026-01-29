@@ -1,10 +1,10 @@
 {
 	"name": "common-config-deploy",
-	"packageManager": "yarn@4.9.1",
+	"packageManager": "yarn@4.12.0",
 	"dependencies": {
-		"dotenv": "^16.5.0",
-		"octokit": "^4.1.3",
+		"dotenv": "^16.6.1",
+		"octokit": "^4.1.4",
 		"p-lazy": "^5.0.0",
-		"semver": "^7.7.1"
+		"semver": "^7.7.3"
 	}
 }
