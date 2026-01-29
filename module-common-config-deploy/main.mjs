@@ -92,30 +92,9 @@ for (const repo of allRepos) {
 
 		// Check if issue templates exist and get their content
 		const [bugTemplate, configTemplate, featureTemplate] = await Promise.all([
-			octokit.rest.repos
-				.getContent({
-					owner: 'bitfocus',
-					repo: repoName,
-					path: '.github/ISSUE_TEMPLATE/bug_report.yml',
-				})
-				.then((res) => res.data.content.replace(/\s+/g, ''))
-				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
-			octokit.rest.repos
-				.getContent({
-					owner: 'bitfocus',
-					repo: repoName,
-					path: '.github/ISSUE_TEMPLATE/config.yml',
-				})
-				.then((res) => res.data.content.replace(/\s+/g, ''))
-				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
-			octokit.rest.repos
-				.getContent({
-					owner: 'bitfocus',
-					repo: repoName,
-					path: '.github/ISSUE_TEMPLATE/feature_request.yml',
-				})
-				.then((res) => res.data.content.replace(/\s+/g, ''))
-				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
+			fetchFileContent(repoName, '.github/ISSUE_TEMPLATE/bug_report.yml'),
+			fetchFileContent(repoName, '.github/ISSUE_TEMPLATE/config.yml'),
+			fetchFileContent(repoName, '.github/ISSUE_TEMPLATE/feature_request.yml'),
 		])
 
 		const expectedFiles = await targetIssueTemplateContentBase64
@@ -132,15 +111,7 @@ for (const repo of allRepos) {
 			// HACK: this is a temporary fixup, because of the accidental deployment..
 
 			// Delete the marker file if it exists
-			const markerFile = await octokit.rest.repos
-				.getContent({
-					owner: 'bitfocus',
-					repo: repoName,
-					path: '.github/.companion-manual-issue-templates',
-				})
-				.then((res) => res.data)
-				.catch((e) => (e.status === 404 ? null : Promise.reject(e)))
-
+			const markerFile = await fileExists(repoName, '.github/.companion-manual-issue-templates')
 			if (markerFile) {
 				console.log(`${repoName}: deleting marker file (templates are up to date)`)
 				await octokit.rest.repos.deleteFile({
@@ -153,15 +124,7 @@ for (const repo of allRepos) {
 			}
 		} else {
 			// Templates don't match or don't exist
-			const issueTemplateSetManual = await octokit.rest.repos
-				.getContent({
-					owner: 'bitfocus',
-					repo: repoName,
-					path: '.github/.companion-manual-issue-templates',
-				})
-				.then(() => true)
-				.catch((e) => (e.status === 404 ? false : Promise.reject(e)))
-
+			const issueTemplateSetManual = await fileExists(repoName, '.github/.companion-manual-issue-templates')
 			if (issueTemplateSetManual) {
 				console.log(`Skipping ${repoName}: companion-manual-issue-templates flag set`)
 			} else {
@@ -268,4 +231,26 @@ async function updateMultipleFiles(repoName, defaultBranch, files) {
 	})
 
 	console.log(`Updated ${repoName} with ${Object.keys(files).length} files in a single commit`)
+}
+
+async function fetchFileContent(repoName, path) {
+	return octokit.rest.repos
+		.getContent({
+			owner: 'bitfocus',
+			repo: repoName,
+			path: path,
+		})
+		.then((res) => res.data.content.replace(/\s+/g, ''))
+		.catch((e) => (e.status === 404 ? null : Promise.reject(e)))
+}
+
+async function fileExists(repoName, path) {
+	return octokit.rest.repos
+		.getContent({
+			owner: 'bitfocus',
+			repo: repoName,
+			path: path,
+		})
+		.then((res) => res.data)
+		.catch((e) => (e.status === 404 ? null : Promise.reject(e)))
 }
