@@ -176,6 +176,27 @@ for (const repo of allRepos) {
 				}
 			}
 		}
+
+		// Check and remove package-lock.json if it exists
+		const packageLockExists = await octokit.rest.repos
+			.getContent({
+				owner: 'bitfocus',
+				repo: repoName,
+				path: 'package-lock.json',
+			})
+			.then((res) => res.data)
+			.catch((e) => (e.status === 404 ? null : Promise.reject(e)))
+
+		if (packageLockExists) {
+			console.log(`${repoName}: removing package-lock.json`)
+			await octokit.rest.repos.deleteFile({
+				owner: 'bitfocus',
+				repo: repoName,
+				path: 'package-lock.json',
+				message: 'chore: remove package-lock.json',
+				sha: packageLockExists.sha,
+			})
+		}
 	} catch (e) {
 		console.error(`Failed ${repoName}: ${e?.message ?? e?.toString() ?? e}`)
 		errors.push(e)
