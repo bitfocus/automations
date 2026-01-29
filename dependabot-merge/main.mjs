@@ -25,7 +25,11 @@ for (const pr of prs.data.items) {
 		if (!name.startsWith('companion-module-') && !name.startsWith('companion-surface-')) continue
 
 		// skip companion-module PRs
-		if (pr.title.toLowerCase().includes('@companion-module/') || pr.title.toLowerCase().includes('@companion-surface/')) continue
+		if (
+			pr.title.toLowerCase().includes('@companion-module/base') ||
+			pr.title.toLowerCase().includes('@companion-surface/base')
+		)
+			continue
 
 		const match = /bump (.+) (\d.+) to (\d.+)/i.exec(pr.title.toLocaleLowerCase())
 		if (!match) continue
