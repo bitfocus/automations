@@ -25,14 +25,16 @@ const targetWorkflowContentBase64 = PLazy.from(async () => {
 })
 
 const targetIssueTemplateContentBase64 = PLazy.from(async () => {
-	const [bugFile, configFile, featureFile] = await Promise.all([
+	const [bugFile, configFileOld, configFile, featureFile] = await Promise.all([
 		fs.readFile(path.join(import.meta.dirname, './assets/ISSUE_TEMPLATE/bug_report.yml'), 'utf-8'),
+		fs.readFile(path.join(import.meta.dirname, './assets/ISSUE_TEMPLATE/config-old.yml'), 'utf-8'),
 		fs.readFile(path.join(import.meta.dirname, './assets/ISSUE_TEMPLATE/config.yml'), 'utf-8'),
 		fs.readFile(path.join(import.meta.dirname, './assets/ISSUE_TEMPLATE/feature_request.yml'), 'utf-8'),
 	])
 
 	return {
 		bugFile: base64Encode(bugFile),
+		configFileOld: base64Encode(configFileOld),
 		configFile: base64Encode(configFile),
 		featureFile: base64Encode(featureFile),
 	}
@@ -121,7 +123,7 @@ for (const repo of allRepos) {
 		// Check if all templates exist and match expected versions
 		const templatesMatch =
 			bugTemplate === expectedFiles.bugFile &&
-			configTemplate === expectedFiles.configFile &&
+			(configTemplate === expectedFiles.configFile || configTemplate === expectedFiles.configFileOld) &&
 			featureTemplate === expectedFiles.featureFile
 
 		if (templatesMatch) {
