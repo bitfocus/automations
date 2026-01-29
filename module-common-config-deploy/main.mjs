@@ -98,7 +98,7 @@ for (const repo of allRepos) {
 					repo: repoName,
 					path: '.github/ISSUE_TEMPLATE/bug_report.yml',
 				})
-				.then((res) => res.data.content)
+				.then((res) => res.data.content.replace(/\s+/g, ''))
 				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
 			octokit.rest.repos
 				.getContent({
@@ -106,7 +106,7 @@ for (const repo of allRepos) {
 					repo: repoName,
 					path: '.github/ISSUE_TEMPLATE/config.yml',
 				})
-				.then((res) => res.data.content)
+				.then((res) => res.data.content.replace(/\s+/g, ''))
 				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
 			octokit.rest.repos
 				.getContent({
@@ -114,7 +114,7 @@ for (const repo of allRepos) {
 					repo: repoName,
 					path: '.github/ISSUE_TEMPLATE/feature_request.yml',
 				})
-				.then((res) => res.data.content)
+				.then((res) => res.data.content.replace(/\s+/g, ''))
 				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
 		])
 
