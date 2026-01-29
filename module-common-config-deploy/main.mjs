@@ -88,46 +88,92 @@ for (const repo of allRepos) {
 			})
 		}
 
-		const issueTemplateSetManual = await octokit.rest.repos
-			.getContent({
-				owner: 'bitfocus',
-				repo: repoName,
-				path: '.github/.companion-manual-issue-templates',
-			})
-			.then(() => true)
-			.catch((e) => (e.status === 404 ? false : Promise.reject(e)))
-		if (issueTemplateSetManual) {
-			console.log(`Skipping ${repoName}: companion-manual-issue-templates flag set`)
-		} else {
-			// Check if the .github/ISSUE_TEMPLATE folder exists
-			const issueTemplateFolderExists = await octokit.rest.repos
+		// Check if issue templates exist and get their content
+		const [bugTemplate, configTemplate, featureTemplate] = await Promise.all([
+			octokit.rest.repos
 				.getContent({
 					owner: 'bitfocus',
 					repo: repoName,
-					path: '.github/ISSUE_TEMPLATE',
+					path: '.github/ISSUE_TEMPLATE/bug_report.yml',
 				})
-				.then(() => true)
-				.catch((e) => (e.status === 404 ? false : Promise.reject(e)))
-			if (issueTemplateFolderExists) {
-				console.log(`Skipping ${repoName}: ISSUE_TEMPLATE folder already exists`)
+				.then((res) => res.data.content)
+				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
+			octokit.rest.repos
+				.getContent({
+					owner: 'bitfocus',
+					repo: repoName,
+					path: '.github/ISSUE_TEMPLATE/config.yml',
+				})
+				.then((res) => res.data.content)
+				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
+			octokit.rest.repos
+				.getContent({
+					owner: 'bitfocus',
+					repo: repoName,
+					path: '.github/ISSUE_TEMPLATE/feature_request.yml',
+				})
+				.then((res) => res.data.content)
+				.catch((e) => (e.status === 404 ? null : Promise.reject(e))),
+		])
 
-				await octokit.rest.repos.createOrUpdateFileContents({
+		const expectedFiles = await targetIssueTemplateContentBase64
+
+		// Check if all templates exist and match expected versions
+		const templatesMatch =
+			bugTemplate === expectedFiles.bugFile &&
+			configTemplate === expectedFiles.configFile &&
+			featureTemplate === expectedFiles.featureFile
+
+		if (templatesMatch) {
+			console.log(`${repoName}: templates match expected versions`)
+
+			// HACK: this is a temporary fixup, because of the accidental deployment..
+
+			// Delete the marker file if it exists
+			const markerFile = await octokit.rest.repos
+				.getContent({
 					owner: 'bitfocus',
 					repo: repoName,
 					path: '.github/.companion-manual-issue-templates',
-					content: base64Encode('\n'),
-					message: 'chore: add manual issue templates marker',
 				})
+				.then((res) => res.data)
+				.catch((e) => (e.status === 404 ? null : Promise.reject(e)))
+
+			if (markerFile) {
+				console.log(`${repoName}: deleting marker file (templates are up to date)`)
+				await octokit.rest.repos.deleteFile({
+					owner: 'bitfocus',
+					repo: repoName,
+					path: '.github/.companion-manual-issue-templates',
+					message: 'chore: remove accidental manual issue templates marker',
+					sha: markerFile.sha,
+				})
+			}
+		} else {
+			// Templates don't match or don't exist
+			const issueTemplateSetManual = await octokit.rest.repos
+				.getContent({
+					owner: 'bitfocus',
+					repo: repoName,
+					path: '.github/.companion-manual-issue-templates',
+				})
+				.then(() => true)
+				.catch((e) => (e.status === 404 ? false : Promise.reject(e)))
+
+			if (issueTemplateSetManual) {
+				console.log(`Skipping ${repoName}: companion-manual-issue-templates flag set`)
 			} else {
-				console.log(`Creating ${repoName}: ISSUE_TEMPLATE folder`)
+				if (templatesMatch) {
+					console.log(`Skipping ${repoName}: templates exist and are up to date`)
+				} else {
+					console.log(`Creating ${repoName}: templates need updating`)
 
-				const files = await targetIssueTemplateContentBase64
-
-				await updateMultipleFiles(repoName, repo.default_branch, {
-					'.github/ISSUE_TEMPLATE/bug_report.yml': files.bugFile,
-					'.github/ISSUE_TEMPLATE/config.yml': files.configFile,
-					'.github/ISSUE_TEMPLATE/feature_request.yml': files.featureFile,
-				})
+					await updateMultipleFiles(repoName, repo.default_branch, {
+						'.github/ISSUE_TEMPLATE/bug_report.yml': expectedFiles.bugFile,
+						'.github/ISSUE_TEMPLATE/config.yml': expectedFiles.configFile,
+						'.github/ISSUE_TEMPLATE/feature_request.yml': expectedFiles.featureFile,
+					})
+				}
 			}
 		}
 	} catch (e) {
