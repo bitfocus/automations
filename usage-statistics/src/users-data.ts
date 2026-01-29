@@ -2,7 +2,7 @@ import { DRY_RUN, runQuery } from './util.js'
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import type { AppStore } from './types.js'
-import type { CompanionUsers, StatsSamplePeriod } from './prisma/client.js'
+import { CompanionUsers, StatsSamplePeriod } from './prisma/client.js'
 
 function translateResults(stats: any[], type: StatsSamplePeriod): Omit<CompanionUsers, 'id' | 'ts'>[] {
 	const regex = /^(\d+).(\d+).(\d+)/
@@ -139,15 +139,15 @@ export async function runUsers(store: AppStore): Promise<void> {
 	await Promise.all([
 		runQuery('Users 30day', async () => {
 			const rows = await store.srcDb.query(formatQuery('30 day'))
-			await writeData(store, rows, 'day30' as '30day')
+			await writeData(store, rows, StatsSamplePeriod.day30)
 		}),
 		runQuery('Users 7day', async () => {
 			const rows = await store.srcDb.query(formatQuery('7 day'))
-			await writeData(store, rows, 'day7' as '7day')
+			await writeData(store, rows, StatsSamplePeriod.day7)
 		}),
 		runQuery('Users 1day', async () => {
 			const rows = await store.srcDb.query(formatQuery('24 hour'))
-			await writeData(store, rows, 'day1' as '1day')
+			await writeData(store, rows, StatsSamplePeriod.day1)
 		}),
 	])
 }
