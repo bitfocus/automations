@@ -1,9 +1,9 @@
 {
   "name": "dependabot-merge",
-  "packageManager": "yarn@4.12.0",
+  "packageManager": "yarn@4.13.0",
   "dependencies": {
     "dotenv": "^16.6.1",
     "octokit": "^4.1.4",
-    "semver": "^7.7.3"
+    "semver": "^7.7.4"
   }
 }
