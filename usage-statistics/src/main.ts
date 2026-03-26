@@ -5,7 +5,7 @@ import { runModules } from './modules-data.js'
 import { runPlatforms } from './platforms.js'
 import { runPlatformStats } from './platform-stats.js'
 import type { AppStore } from './types.js'
-import mariadb from 'mariadb'
+import * as mariadb from 'mariadb'
 import { runSurfaceCounts, runSurfaceTotals } from './surfaces.js'
 
 console.log('hello world')

@@ -1,5 +1,5 @@
 import type { PrismaClient } from './prisma/client.js'
-import type mariadb from 'mariadb'
+import type * as mariadb from 'mariadb'
 
 export interface AppStore {
 	prismaDest: PrismaClient
