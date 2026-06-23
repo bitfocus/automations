@@ -5,6 +5,9 @@ import path from 'path'
 import YAML from 'yaml'
 import semver from 'semver'
 
+// Minimum yarn version required to understand the .yarnrc.yml keys we enforce
+const MIN_YARN_VERSION = '4.10.0'
+
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
 
 const {
@@ -227,7 +230,6 @@ async function syncMultipleFiles(repoName, defaultBranch, files, message) {
 // new enough to understand the .yarnrc.yml keys we enforce. The .yarnrc.yml changes
 // require that newer yarn, so both files are committed together - an intermediate
 // state with only one applied would leave yarn erroring.
-const MIN_YARN_VERSION = '4.10.0'
 async function ensureYarnConfig(repoName, defaultBranch) {
 	const files = {}
 
