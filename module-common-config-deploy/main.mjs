@@ -5,8 +5,10 @@ import path from 'path'
 import YAML from 'yaml'
 import semver from 'semver'
 
-// Minimum yarn version required to understand the .yarnrc.yml keys we enforce
+// Minimum yarn version required to understand the .yarnrc.yml keys we enforce.
+// Repos below this get bumped up to TARGET_YARN_VERSION.
 const MIN_YARN_VERSION = '4.10.0'
+const TARGET_YARN_VERSION = '4.17.0'
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
 
@@ -233,7 +235,7 @@ async function syncMultipleFiles(repoName, defaultBranch, files, message) {
 async function ensureYarnConfig(repoName, defaultBranch) {
 	const files = {}
 
-	const packageJson = await computePackageManagerUpdate(repoName, MIN_YARN_VERSION)
+	const packageJson = await computePackageManagerUpdate(repoName, MIN_YARN_VERSION, TARGET_YARN_VERSION)
 	if (packageJson) files['package.json'] = packageJson
 
 	const yarnrc = await computeYarnrcUpdate(repoName)
