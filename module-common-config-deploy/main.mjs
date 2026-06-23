@@ -1,9 +1,7 @@
 import { Octokit } from 'octokit'
-import dotenv from 'dotenv'
 import PLazy from 'p-lazy'
 import fs from 'fs/promises'
 import path from 'path'
-dotenv.config()
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
 
