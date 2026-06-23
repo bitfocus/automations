@@ -1,7 +1,5 @@
 import { Octokit, App } from 'octokit'
-import dotenv from 'dotenv'
 import semver from 'semver'
-dotenv.config()
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
 
@@ -13,6 +11,7 @@ console.log('Hello, %s', login)
 const prs = await octokit.rest.search.issuesAndPullRequests({
 	q: 'is:pr is:open archived:false sort:updated-desc user:bitfocus author:app/dependabot',
 	per_page: 100,
+	advanced_search: 'true',
 })
 
 // console.log('issues', prs)
