@@ -1,12 +1,13 @@
 {
 	"name": "common-config-deploy",
 	"packageManager": "yarn@4.17.0",
-  "scripts": {
-  "start": "node --env-file=.env main.mjs"
-  },
+	"scripts": {
+		"start": "node --env-file=.env main.mjs"
+	},
 	"dependencies": {
 		"octokit": "^5.0.5",
 		"p-lazy": "^5.0.0",
-		"semver": "^7.8.5"
+		"semver": "^7.8.5",
+		"yaml": "^2.9.0"
 	}
 }
