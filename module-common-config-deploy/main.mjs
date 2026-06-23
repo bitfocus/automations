@@ -288,10 +288,10 @@ function ensurePreapprovedPackage(doc, pkg) {
 	}
 }
 
-// Return package.json content with its yarn packageManager bumped to at least
-// minVersion (editing the field in place to preserve formatting), or null if the
-// field is already new enough or not a yarn packageManager.
-async function computePackageManagerUpdate(repoName, minVersion) {
+// Return package.json content with its yarn packageManager bumped to targetVersion
+// when it's below minVersion (editing the field in place to preserve formatting), or
+// null if the field is already new enough or not a yarn 4.x packageManager.
+async function computePackageManagerUpdate(repoName, minVersion, targetVersion) {
 	const existing = await fetchFileRaw(repoName, 'package.json')
 	if (!existing) return null
 
@@ -302,7 +302,7 @@ async function computePackageManagerUpdate(repoName, minVersion) {
 	if (semver.major(currentVersion) !== 4) return null // only manage yarn 4.x
 	if (semver.gte(currentVersion, minVersion)) return null // already new enough
 
-	return existing.content.replace(match[0], `"packageManager": "yarn@${minVersion}"`)
+	return existing.content.replace(match[0], `"packageManager": "yarn@${targetVersion}"`)
 }
 
 // Commit one or more files (path -> UTF-8 content) to the default branch in a single commit
