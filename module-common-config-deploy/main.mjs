@@ -8,7 +8,7 @@ import semver from 'semver'
 // Minimum yarn version required to understand the .yarnrc.yml keys we enforce.
 // Repos below this get bumped up to TARGET_YARN_VERSION.
 const MIN_YARN_VERSION = '4.10.0'
-const TARGET_YARN_VERSION = '4.17.0'
+const TARGET_YARN_VERSION = '4.13.0' // Newer requires a lockfile regeneration, which is too mcuh effort to do automatically at this point
 
 const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN })
 
