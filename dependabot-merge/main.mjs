@@ -30,7 +30,7 @@ for (const pr of prs.data.items) {
 		)
 			continue
 
-		const match = /bump (.+) (\d.+) to (\d.+)/i.exec(pr.title.toLocaleLowerCase())
+		const match = /bump (.+) (\d\S*) to (\d\S*)/i.exec(pr.title.toLocaleLowerCase())
 		if (!match) continue
 
 		const vFrom = semver.parse(match[2])
