@@ -2,6 +2,7 @@ import { PrismaClient } from './prisma/client.js'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import { runUsers } from './users-data.js'
 import { runModules } from './modules-data.js'
+import { runModuleVersions } from './module-versions-data.js'
 import { runPlatforms } from './platforms.js'
 import { runPlatformStats } from './platform-stats.js'
 import type { AppStore } from './types.js'
@@ -37,6 +38,7 @@ try {
 		// Set everything going
 		runUsers(store),
 		runModules(store),
+		runModuleVersions(store),
 		runPlatforms(store),
 		runPlatformStats(store),
 		runSurfaceCounts(store),

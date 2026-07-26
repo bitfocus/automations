@@ -20,6 +20,21 @@ model CompanionModules {
   @@map("companion_modules")
 }
 
+model CompanionModuleVersions {
+  id         Int               @id @default(autoincrement())
+  type       StatsSamplePeriod
+  module     String            @db.VarChar(64)
+  version    String            @db.VarChar(64)
+  user_count Int
+  ts         DateTime          @default(now()) @db.DateTime(0)
+
+  @@index([module], map: "module")
+  @@index([version], map: "version")
+  @@index([ts], map: "ts")
+  @@index([type], map: "type")
+  @@map("companion_module_versions")
+}
+
 model CompanionPlatformStats {
   id            Int               @id @default(autoincrement())
   type          StatsSamplePeriod
