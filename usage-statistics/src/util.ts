@@ -1,4 +1,5 @@
-export const DRY_RUN = process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true'
+export const DRY_RUN =
+	process.env.DRY_RUN === '1' || process.env.DRY_RUN === 'true' || process.argv.slice(2).includes('--dry-run')
 
 export async function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms || 0))
