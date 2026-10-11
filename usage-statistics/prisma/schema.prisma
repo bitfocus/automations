@@ -95,6 +95,44 @@ model CompanionSurfaceTotalSeen {
   @@index([ts], map: "ts")
 }
 
+// Generic feature usage, scraped from every column of CompanionFeatures
+// Booleans, enums and bucketed numbers. A 'null' value counts users whose version doesn't report the feature,
+// so SUM(user_count) per (type, version_group, feature, ts) is the total active users in that group
+model CompanionFeatureValues {
+  id            Int               @id @default(autoincrement())
+  type          StatsSamplePeriod
+  version_group String            @db.VarChar(16) // major.minor, 'all' or 'other'
+  feature       String            @db.VarChar(64)
+  value         String            @db.VarChar(64)
+  user_count    Int
+  ts            DateTime          @default(now()) @db.DateTime(0)
+
+  @@index([feature, type, ts])
+  @@index([ts], map: "ts")
+  @@map("companion_feature_values")
+}
+
+// Summary of numeric CompanionFeatures columns, excluding users who don't report the feature
+model CompanionFeatureNumeric {
+  id            Int               @id @default(autoincrement())
+  type          StatsSamplePeriod
+  version_group String            @db.VarChar(16) // major.minor, 'all' or 'other'
+  feature       String            @db.VarChar(64)
+  users         Int // users reporting a value
+  nonzero_users Int // users with a value other than 0
+  sum           BigInt
+  mean          Float
+  p50           Float
+  p90           Float
+  p99           Float
+  max           Int
+  ts            DateTime          @default(now()) @db.DateTime(0)
+
+  @@index([feature, type, ts])
+  @@index([ts], map: "ts")
+  @@map("companion_feature_numeric")
+}
+
 enum StatsSamplePeriod {
   day1  @map("1day")
   day7  @map("7day")
