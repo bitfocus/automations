@@ -18,6 +18,12 @@ const IGNORED_PREFIXES = ['app_', 'os_']
 // Maximum distinct values to keep for a string column, the rest are grouped as 'other'
 const MAX_CATEGORICAL_VALUES = 30
 
+// Users who didn't report a value are split into these, per version group:
+// 'unsupported' when nobody in the group reports the feature (their version predates it), otherwise 'unknown'
+const VALUE_NULL = 'null'
+const VALUE_UNKNOWN = 'unknown'
+const VALUE_UNSUPPORTED = 'unsupported'
+
 type FeatureKind = 'boolean' | 'categorical' | 'numeric'
 
 interface FeatureOverride {
@@ -124,7 +130,7 @@ function percentile(sorted: number[], p: number): number {
 }
 
 function formatValue(column: FeatureColumn, raw: unknown): string {
-	if (raw === null || raw === undefined) return 'null'
+	if (raw === null || raw === undefined) return VALUE_NULL
 	switch (column.kind) {
 		case 'boolean':
 			return Number(raw) ? 'true' : 'false'
@@ -132,6 +138,31 @@ function formatValue(column: FeatureColumn, raw: unknown): string {
 			return column.exact ? String(Number(raw)) : bucketNumber(Number(raw))
 		case 'categorical':
 			return String(raw as string | number).slice(0, 64)
+	}
+}
+
+function summariseNumbers(
+	column: FeatureColumn,
+	rows: any[]
+): Omit<FeatureNumericRow, 'type' | 'version_group' | 'feature'> | null {
+	const numbers: number[] = []
+	for (const row of rows) {
+		const raw = row[column.name]
+		if (raw !== null && raw !== undefined) numbers.push(Number(raw))
+	}
+	if (numbers.length === 0) return null
+
+	numbers.sort((a, b) => a - b)
+	const sum = numbers.reduce((acc, v) => acc + v, 0)
+	return {
+		users: numbers.length,
+		nonzero_users: numbers.filter((v) => v !== 0).length,
+		sum: BigInt(sum),
+		mean: sum / numbers.length,
+		p50: percentile(numbers, 50),
+		p90: percentile(numbers, 90),
+		p99: percentile(numbers, 99),
+		max: numbers[numbers.length - 1],
 	}
 }
 
@@ -143,8 +174,8 @@ function aggregate(
 	const values: FeatureValueRow[] = []
 	const numeric: FeatureNumericRow[] = []
 
-	// Group the users by version, with a synthetic 'all' group
-	const groups = new Map<string, any[]>([['all', rows]])
+	// Group the users by version
+	const groups = new Map<string, any[]>()
 	for (const row of rows) {
 		const group = versionGroup(row.app_version)
 		let groupRows = groups.get(group)
@@ -167,42 +198,41 @@ function aggregate(
 					.slice(0, MAX_CATEGORICAL_VALUES)
 					.map((e) => e[0])
 			)
-			allowedValues.add('null')
+			allowedValues.add(VALUE_NULL)
 		}
+
+		// The synthetic 'all' group is the sum of the version groups, so that it carries their unknown/unsupported split
+		const allCounts = new Map<string, number>()
 
 		for (const [group, groupRows] of groups) {
 			const counts = new Map<string, number>()
-			const numbers: number[] = []
-
 			for (const row of groupRows) {
-				const raw = row[column.name]
-				let value = formatValue(column, raw)
+				let value = formatValue(column, row[column.name])
 				if (allowedValues && !allowedValues.has(value)) value = 'other'
 				counts.set(value, (counts.get(value) ?? 0) + 1)
+			}
 
-				if (column.kind === 'numeric' && raw !== null && raw !== undefined) numbers.push(Number(raw))
+			// If nobody in this version group reports the feature, assume the version is too old to support it
+			const nullCount = counts.get(VALUE_NULL)
+			if (nullCount !== undefined) {
+				counts.delete(VALUE_NULL)
+				counts.set(counts.size === 0 ? VALUE_UNSUPPORTED : VALUE_UNKNOWN, nullCount)
 			}
 
 			for (const [value, user_count] of counts) {
 				values.push({ type, version_group: group, feature: column.name, value, user_count })
+				allCounts.set(value, (allCounts.get(value) ?? 0) + user_count)
 			}
+		}
 
-			if (column.kind === 'numeric' && numbers.length > 0) {
-				numbers.sort((a, b) => a - b)
-				const sum = numbers.reduce((acc, v) => acc + v, 0)
-				numeric.push({
-					type,
-					version_group: group,
-					feature: column.name,
-					users: numbers.length,
-					nonzero_users: numbers.filter((v) => v !== 0).length,
-					sum: BigInt(sum),
-					mean: sum / numbers.length,
-					p50: percentile(numbers, 50),
-					p90: percentile(numbers, 90),
-					p99: percentile(numbers, 99),
-					max: numbers[numbers.length - 1],
-				})
+		for (const [value, user_count] of allCounts) {
+			values.push({ type, version_group: 'all', feature: column.name, value, user_count })
+		}
+
+		if (column.kind === 'numeric') {
+			for (const [group, groupRows] of [['all', rows] as const, ...groups]) {
+				const summary = summariseNumbers(column, groupRows)
+				if (summary) numeric.push({ type, version_group: group, feature: column.name, ...summary })
 			}
 		}
 	}
