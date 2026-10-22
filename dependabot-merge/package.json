@@ -1,6 +1,6 @@
 {
   "name": "dependabot-merge",
-  "packageManager": "yarn@4.17.0",
+  "packageManager": "yarn@4.18.1",
   "start": "node --env-file=.env main.mjs",
   "dependencies": {
     "octokit": "^5.0.5",
